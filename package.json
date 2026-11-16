@@ -1,0 +1,43 @@
+{
+  "name": "superdoc-word-addin",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "build": "tsx scripts/build.ts",
+    "typecheck": "tsc --noEmit",
+    "test": "tsx --test test/*.test.ts",
+    "test:native": "tsx --test test/*.native.ts",
+    "certs": "office-addin-dev-certs install",
+    "dev": "pnpm build && tsx --env-file-if-exists=.env src/server/index.ts",
+    "start": "tsx --env-file-if-exists=.env src/server/index.ts",
+    "validate": "office-addin-manifest validate manifest.xml"
+  },
+  "dependencies": {
+    "@hono/node-server": "^1.19.4",
+    "@superdoc/sdk": "2.27.0-next.19",
+    "@xmldom/xmldom": "0.9.12",
+    "fflate": "^0.8.2",
+    "hono": "^4.12.14",
+    "openai": "^6.25.0",
+    "zod": "^4.1.11"
+  },
+  "devDependencies": {
+    "@types/node": "^24.7.2",
+    "@types/office-js": "^1.0.377",
+    "esbuild": "^0.25.0",
+    "office-addin-dev-certs": "^1.13.5",
+    "office-addin-manifest": "^1.13.6",
+    "tsx": "^4.20.6",
+    "typescript": "^5.9.3"
+  },
+  "version": "0.1.0",
+  "description": "A Word agent add-in with SuperDoc backend editing and Office.js fragment updates.",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/mattConnHarbour/superdoc-word-addin.git"
+  },
+  "packageManager": "pnpm@11.28.12"
+}

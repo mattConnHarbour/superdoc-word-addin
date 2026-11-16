@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>SuperDoc Agent</title>
+    <link rel="stylesheet" href="/taskpane.css" />
+    <script src="https://appsforoffice.microsoft.com/lib/1/hosted/office.js"></script>
+    <script type="module" src="/taskpane.js"></script>
+  </head>
+  <body>
+    <header><span class="brand">S</span><div><h1>SuperDoc Agent</h1><p>Your document, a conversation away.</p></div></header>
+    <main id="messages" aria-label="Conversation" role="log" aria-live="polite">
+      <article class="welcome"><span class="eyebrow">LET’S WORK ON YOUR DOCUMENT</span><h2>What would you like to change?</h2><p>Ask me to rewrite a section, format a table, or add something new.</p></article>
+    </main>
+    <footer>
+      <p id="status" role="status">Connecting to Word…</p>
+      <form id="chat-form">
+        <label for="prompt">Message SuperDoc</label>
+        <textarea id="prompt" placeholder="Make the introduction more concise…" maxlength="12000" rows="3" required disabled></textarea>
+        <div class="actions"><button id="cancel" class="ds-button" type="button" hidden>Stop</button><button id="send" class="ds-button ds-button-primary" type="submit" disabled>Send request <span aria-hidden="true">↑</span></button></div>
+      </form>
+      <p class="disclosure">Each request sends this DOCX to the local backend and document content to OpenAI. Completed edits update affected paragraphs and tables in Word.</p>
+    </footer>
+  </body>
+</html>
