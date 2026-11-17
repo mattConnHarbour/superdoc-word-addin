@@ -1,9 +1,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { strToU8, zipSync } from "fflate";
 import type { RunRequest, RunResponse } from "../src/contract.js";
 import { bytesToBase64, readCompressedDocument } from "../src/taskpane/office/files.js";
-import { packageRevision } from "../src/taskpane/document-revision.js";
 import type { Snapshot } from "../src/taskpane/operations.js";
 import { updateDocument, WordPatchError, type DocumentBridge } from "../src/taskpane/roundtrip.js";
 
@@ -72,21 +70,6 @@ test("retains the exported version and warns about partial writes if Office reje
     assert.equal(error.response.documentBase64, "UEsDBA==");
     return true;
   });
-});
-
-test("revision ignores ZIP timestamps and export metadata but detects formatting, headers, and custom XML", async () => {
-  const core = (timestamp: string) => strToU8(`<cp:coreProperties xmlns:cp="http://schemas.openxmlformats.org/package/2006/metadata/core-properties" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:dcterms="http://purl.org/dc/terms/"><dc:title>Title</dc:title><dcterms:modified>${timestamp}</dcterms:modified></cp:coreProperties>`);
-  const parts = {
-    "word/document.xml": strToU8('<w:p xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:r><w:t>Hello</w:t></w:r></w:p>'),
-    "word/header1.xml": strToU8("<header>Header</header>"),
-    "customXml/item1.xml": strToU8("<record>Record</record>"),
-    "docProps/core.xml": core("Timestamp A"),
-  };
-  const revision = await packageRevision(new Uint8Array(zipSync(parts, { level: 0 })));
-  assert.equal(await packageRevision(new Uint8Array(zipSync({ ...parts, "docProps/core.xml": core("Timestamp B") }, { level: 9 }))), revision);
-  for (const name of ["word/document.xml", "word/header1.xml", "customXml/item1.xml", "docProps/core.xml"]) {
-    assert.notEqual(await packageRevision(new Uint8Array(zipSync({ ...parts, [name]: strToU8("<changed>Changed</changed>") }))), revision);
-  }
 });
 
 test("Word file handles are closed when a later export slice fails", async () => {

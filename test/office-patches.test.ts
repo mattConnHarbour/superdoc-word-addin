@@ -15,15 +15,21 @@ class FakeWord {
   writes: string[] = [];
   tracked = new Set<FakeRange>();
   onSync: (() => void) | undefined;
+  onExport: (() => void) | undefined;
+  liveXml = (xml: string) => xml;
   document = {
     body: {
-      getOoxml: () => ({ value: flat(this.content.map((block) => block.xml).join("")) }),
+      getOoxml: () => ({ value: flat(this.content.map((block) => this.liveXml(block.xml)).join("")) }),
       paragraphs: { load() {}, items: this.content.map((block) => ({ parentTableOrNullObject: { isNullObject: true }, getRange: () => new FakeRange(this, block.id, block.id) })) },
       tables: { load() {}, items: [] },
     },
   };
   context = { document: this.document, sync: async () => { this.onSync?.(); } };
-  exportBytes() { return zipSync({ "word/document.xml": strToU8(documentXml(this.content.map((block) => block.xml).join(""))) }); }
+  exportBytes() {
+    const bytes = zipSync({ "word/document.xml": strToU8(documentXml(this.content.map((block) => block.xml).join(""))) });
+    this.onExport?.();
+    return bytes;
+  }
 }
 class FakeRange {
   constructor(readonly word: FakeWord, readonly first: number, readonly last: number) {}
@@ -33,7 +39,7 @@ class FakeRange {
   getOoxml() {
     const start = this.word.content.findIndex((block) => block.id === this.first);
     const end = this.word.content.findIndex((block) => block.id === this.last);
-    const content = start < 0 || end < 0 ? "" : this.word.content.slice(start, end + 1).map((block) => block.xml).join("");
+    const content = start < 0 || end < 0 ? "" : this.word.content.slice(start, end + 1).map((block) => this.word.liveXml(block.xml)).join("");
     return { value: flat(`${content}<w:p xmlns:w="${W}"/>`) };
   }
   insertOoxml(xml: string, location: string) {
@@ -82,6 +88,26 @@ function applyFragmentPatches(source: Snapshot, patches: FragmentPatch[], signal
 function patch(start: number, expected: string[], text: string): FragmentPatch {
   return { start, deleteCount: expected.length, expected, insertCount: 1, ooxml: flat(paragraph(text)) };
 }
+
+test("Word's live OOXML projection can differ from its DOCX export without a false capture conflict", async () => withWord(async (word) => {
+  word.liveXml = (xml) => xml.replace("<w:r>", '<w:pPr><w:contextualSpacing w:val="0"/></w:pPr><w:r>');
+  const source = await captureFragmentSource();
+  const hash = source.blocks[0]?.fingerprint;
+  assert.ok(hash);
+  assert.equal(await applyFragmentPatches(source, [patch(0, [hash], "Edited first")], signal, () => {}), true);
+  assert.deepEqual(word.writes, ["Replace"]);
+}));
+
+test("a real edit during DOCX capture is rejected and releases tracked ranges", async () => withWord(async (word) => {
+  word.onExport = () => {
+    const first = word.content[0];
+    assert.ok(first);
+    first.xml = paragraph("Edited while exporting");
+  };
+  await assert.rejects(captureFragmentSource(), /Word changed during capture/u);
+  assert.equal(word.tracked.size, 0);
+  assert.deepEqual(word.writes, []);
+}));
 
 test("tracked Word ranges preserve unrelated coauthor edits and apply only the target fragment", async () => withWord(async (word) => {
   const source = await captureFragmentSource();

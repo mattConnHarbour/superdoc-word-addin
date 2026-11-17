@@ -1,0 +1,40 @@
+Completely redesign the referenced diagram into an extremely simple overview of the ENTIRE fragment patching process. Do not merely simplify the paragraph example. The user rejected earlier versions as too complicated. Remove all existing layout, panels, swimlanes, examples, branches, footnotes, code, title, and subtitle.
+
+Create ONE clean horizontal flow of FIVE stages, filling a wide landscape canvas. White background, flat minimalist editorial diagram, navy typography, restrained blue highlights, one teal accent. No gradients, shadows, giant containers, or decorative graphics. Huge legible labels, lots of whitespace, uniform spacing. Simple thin arrows from stage 1 to 2 to 3 to 4 to 5. No branching arrows, no decision diamonds, no extra process rows. At most 65 words in the entire image. No overall title. Draw real schematic document blocks, not elaborate illustrations.
+
+Each stage has a small stage number, one main visual, a short main label, and the specified short secondary text. Use this EXACT wording:
+
+Stage 1:
+"Capture document"
+"WORD"
+"Snapshot + tracked positions"
+Visual: document containing five simple blocks A, C, T, Z (four blocks, T is a small table grid). C and T blue outlined. Small pin markers beside BOTH C and T representing retained Word range handles. A small overlapping page represents the exported snapshot.
+
+Stage 2:
+"Edit a copy"
+"SUPERDOC AGENT"
+"Checkpoint → edits"
+Visual: separate copy of document A, C′, T′, Z. C′ and T′ blue filled; T′ is a table grid. Small checkpoint flag on the copied document, then a simple pencil marking both affected blocks. This is editing a backend copy, not the live Word document.
+
+Stage 3:
+"Build fragments"
+"CHANGES API"
+"Changed paragraphs + tables"
+Visual: only two detached small blocks C′ and T′, one paragraph tile and one table tile, both blue. Clearly show ONLY these changed fragments being returned, not an entire document.
+
+Stage 4:
+"Match live targets"
+"WORD"
+"Tracked ranges + conflict checks"
+Visual: live document A, X, C, T, Z. X is teal and represents an unrelated insertion. C and T have the SAME pin markers as stage 1. They have shifted lower because X was inserted. A small magnifier or check symbol verifies those target blocks. Do not show C′ or T′ yet at this stage.
+
+Stage 5:
+"Apply fragments"
+"OFFICE.JS"
+"Update only the targets"
+Visual: live document A, X, C′, T′, Z. C′ and T′ blue filled, X teal preserved, A and Z unchanged. A small checkmark indicates success.
+
+Below the five stages draw ONLY ONE light dotted blue connector from the pin markers at stage 1 to the pin markers at stage 4. It travels through otherwise empty whitespace below the stages without passing through any visuals or captions. Label it ONLY:
+"Positions follow the live document"
+
+No additional example, no recovery export, no coverage guard details, no implementation function names, no payload schema, no Word snapshot bracketing sub-flow, no global heading. This is a concise conceptual flow. Preserve the factual sequence: Word capture and retained range handles; backend checkpoint then agent edits the same SDK document; Changes API identifies affected blocks and SDK exports fragments; Word resolves original targets using retained handles and checks conflicts; Office.js applies only affected fragments. Word handles stay in Word; the dotted connector bypasses backend stages. Be precise and visually calm. High-resolution wide PNG.

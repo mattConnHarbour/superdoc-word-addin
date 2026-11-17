@@ -1,0 +1,43 @@
+Edit the referenced diagram into a much simpler, cleaner flow diagram. Treat the original only as a factual reference; completely redesign the layout.
+
+User request: less text, less code, no overall title or subtitle, use the entire canvas well. Make a large, high-resolution landscape PNG (ideally 3000 × 2000 or larger) that can be zoomed. Clean technical editorial style: white canvas, navy text, thin blue arrows, blue and teal accents, amber only for the stop branch. Flat shapes, no gradients or decorative shadows. Large legible type, generous internal spacing, consistent alignment. Do not retain dense text boxes, bullet lists, function signatures, JSON, code, or the original giant colored lane labels.
+
+Use three visual bands, filling the canvas. No page title.
+
+UPPER BAND, small label at left: "WORD · OFFICE.JS"
+Show a left-to-right living-document timeline with three main stations:
+1) A document icon with rows A / B / C, caption "Capture".
+Below it a compact three-step strip: "Before" → "Export DOCX" → "After", with a small connecting bracket caption "Check live snapshots".
+A small adjacent anchor-map card reads "Keep tracked ranges" and visually links original block C to an anchor symbol labeled "C". Another tiny caption: "Live baseline stays here".
+2) In the middle a document icon showing A / X / B / C, caption "User keeps editing". X is teal, C remains blue. A dotted blue line across this whole band connects the original C anchor to C in this moving document, then onward to the rightmost document. Small caption on dotted line: "Ranges follow content".
+3) At right a small diamond "Target unchanged?" with two arrows: YES → document icon A / X / B / C′ caption "Apply fragments"; NO → small amber stop pill "Stop · keep Word".
+A small subdued caption under the successful result: "Release tracked ranges".
+Make the success path most prominent.
+
+MIDDLE BAND, small label at left: "BACKEND · SUPERDOC"
+Show a clean horizontal pipeline of five evenly spaced compact stations with one main label and at most one short sublabel:
+"Open DOCX" with page icon →
+"Save checkpoint" sublabel "Journal cursor + block map" with checkpoint flag icon →
+"Agent edits" sublabel "Same SDK session" with pen icon →
+"Read changes" sublabel "Changes API" with highlighted-block icon →
+"Export fragments" sublabel "OOXML + dependencies" with 2 detached paragraph/table tiles.
+An arrow from the Word capture export descends into "Open DOCX". An arrow from "Export fragments" rises into the Word target-check diamond, labeled "Changed blocks + original positions".
+Very small side branch from Agent edits area to a faded file icon at the lower edge of this band labeled "Final DOCX · recovery only".
+A small shield below checkpoint/read changes, connected with a light dotted line, caption "Coverage guard". It is secondary, not a step that edits Word.
+
+LOWER BAND: a prominent, spacious visual zoom-in of position maintenance occupying roughly the bottom third, without a sentence-style heading.
+Three document stacks, horizontally aligned, with arrows connecting:
+Left caption "Capture":
+rows "A", "B", "C". Left of C only, a small badge "original 2". To the right of C, an anchor symbol labeled "C".
+Middle caption "User inserts X":
+rows "A", "X", "B", "C". X teal. C blue and clearly still attached to the same anchor C, now one row lower.
+Right caption "Patch C":
+rows "A", "X", "B", "C′". X teal preserved; C′ blue updated. C′ retains the same anchor symbol.
+Draw a dotted blue connector that follows C through the three stacks, literally shifting down a row in the middle. The ordinary main arrows between stacks stay outside the rows.
+One short caption centered beneath these stacks: "Original block → tracked range → current location".
+Two tiny footer chips, visually subordinate: "Paragraphs or whole tables" and "No automatic full replacement".
+
+Factual constraints: The Word live-body reads before and after the single source DOCX export are compared to one another, not directly to the DOCX XML. Word range handles and live baseline stay in the pane. The backend captures its journal cursor BEFORE the agent edits, retains the same SDK session, then reads the Changes API and exports changed block fragments. The backend does not maintain live Word handles or perform a custom document diff. The patch's original block position resolves to a tracked range, NOT a stale current numeric index. Unrelated insertion X survives. Existing target edits stop application. No persistent bookmarks, no absolute character offsets, no full-document replacement on the main path. Make all arrows unambiguous and keep text minimal.
+
+Final refinement prompt:
+Preserve the generated layout and content. Route the Export fragments return arrow into the bottom of the Target unchanged? diamond, never into Stop. Move the amber Stop pill leftward, with a separate NO branch from the diamond. Keep the returned-fragments arrow to the right of the NO branch without crossing. YES still leads to Apply fragments. Preserve all other elements.

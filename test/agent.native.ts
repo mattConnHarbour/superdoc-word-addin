@@ -10,7 +10,7 @@ import type OpenAI from "openai";
 import { runAgent, type Complete } from "../src/server/agent.js";
 import { createApp } from "../src/server/app.js";
 import { ADDIN_ORIGIN, runResponseSchema } from "../src/contract.js";
-import { digestBytes } from "../src/taskpane/document-revision.js";
+import { digestBytes } from "../src/digest.js";
 import type { Snapshot } from "../src/taskpane/operations.js";
 import { updateDocument } from "../src/taskpane/roundtrip.js";
 
@@ -73,7 +73,7 @@ test("edits through real SDK tools and applies only the returned OOXML fragments
       assert.equal(response.status, 200, await response.clone().text());
       return runResponseSchema.parse(await response.json());
     });
-    assert.equal(result.status, "applied");
+    assert.equal(result.status, "applied", result.response.unsupportedReason);
     assert.equal(patchesApplied, 1);
     assert.equal(result.response.unsupportedReason, undefined);
     assert.equal(result.response.patches[0]?.deleteCount, 0);

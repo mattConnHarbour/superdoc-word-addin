@@ -1,6 +1,6 @@
 import { DOMParser, XMLSerializer, type Document, type Element, type Node } from "@xmldom/xmldom";
 import { strFromU8, unzipSync } from "fflate";
-import { digestBytes } from "./taskpane/document-revision.js";
+import { digestBytes } from "./digest.js";
 
 export const W = "http://schemas.openxmlformats.org/wordprocessingml/2006/main";
 export const PKG = "http://schemas.microsoft.com/office/2006/xmlPackage";
@@ -96,11 +96,6 @@ export function blockKind(block: Element): "p" | "tbl" {
 
 export async function fingerprint(block: Element): Promise<string> {
   return digestBytes(new TextEncoder().encode(canonical(block)));
-}
-
-export function blockIdentity(block: Element): string {
-  const paragraph = block.localName === "p" ? block : block.getElementsByTagNameNS(W, "p")[0];
-  return `${block.localName}:${paragraph?.getAttributeNS(W14, "paraId") || canonical(block)}`;
 }
 
 export function flatDocument(xml: string): Document {

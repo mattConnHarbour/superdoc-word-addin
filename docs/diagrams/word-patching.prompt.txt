@@ -1,0 +1,64 @@
+Use case: infographic-diagram
+Asset type: a polished technical architecture diagram, delivered as a PNG for explaining the actual SuperDoc Word add-in implementation.
+Primary request: Show exactly how snapshots, backend Changes API records, and maintained Word positions produce fragment patches.
+Style: crisp professional vector-like infographic rendered as a high-resolution raster image, white background, dark navy type, restrained blue and teal highlights, amber only for conflict checks. Elegant clear sans-serif typography, fine arrows, ample whitespace. Landscape 3:2 aspect ratio. All text large and legible. No decorative illustrations, gradients, or invented logos.
+
+Main title verbatim: "How Word fragment patching works"
+Subtitle: "Snapshots bind the request. Tracked ranges maintain positions. SuperDoc records the edits."
+
+COMPOSITION:
+Two horizontal swimlanes, WORD / OFFICE.JS above and BACKEND / SUPERDOC SDK below. Three time columns left to right labelled "1  Capture", "2  Edit and plan", "3  Validate and apply". Arrows have clear direction and do not cross text.
+
+Top left WORD / OFFICE.JS capture card:
+"Live body OOXML → DOCX export → Live body OOXML"
+"Compare live snapshots before / after export"
+Below this, two distinct retained items:
+"Pane memory: original block index → tracked Word.Range"
+"Live OOXML baseline + source DOCX hashes"
+Show a small arrow from DOCX export down into backend capture card.
+Important small note: "Live OOXML and DOCX XML are separate representations."
+
+Bottom left BACKEND / SUPERDOC SDK capture card:
+"Open source DOCX"
+"Before edits: changes.snapshot() + ordered block IDs"
+"Same SDK document session throughout"
+Small secondary note: "Native diff checkpoint: coverage guard only"
+
+Bottom middle backend edit-and-plan card:
+"Agent edits through SuperDoc SDK"
+"changes.list(after: cursor) → affected block IDs"
+"Map nested cell changes to their top-level table"
+"Block IDs + current order → patch spans"
+"selection.extractOoxml() → fragment XML + dependencies"
+"Wrap as Flat OPC for Office.js"
+Clearly indicate the Changes API identifies edits; no custom before/after document diff.
+Arrow from this card up/right to top right Word apply card labelled:
+"Patch: original start index, deleteCount, expected hashes, insertCount, OOXML"
+
+Top middle WORD lane:
+"Word remains editable while the agent runs"
+"Office.js tracked ranges follow shifted content"
+Use a dotted horizontal timeline arrow from stored tracked ranges at capture to Word validation at apply. Label it "Live range handles stay in the pane".
+
+Top right WORD validate-and-apply card:
+"Original index → retained range handle"
+"Check target / insertion gap against live baseline"
+"Check request identity + source hashes"
+Decision miniature: "Valid → apply patches in reverse order"
+"Replace: Range.insertOoxml()"
+"Delete: Range.delete()"
+"Insertion: before / after a tracked neighbor"
+"Finally: release tracked ranges"
+Amber stop branch: "Target changed or unsupported → no write"
+
+BOTTOM EXAMPLE STRIP spanning entire width, visually separated with a light blue background:
+Heading: "Position example: an unrelated insertion does not retarget the patch"
+Three compact document stacks side by side with linking arrows:
+A. "Captured order" rows: "0  A", "1  B", "2  C   ← tracked range R2", "3  D".
+B. "While agent runs" rows: "0  A", "1  X   ← user inserts here", "2  B", "3  C   ← R2 still points here", "4  D". Highlight X teal.
+C. "After applying patch" rows: "0  A", "1  X   preserved", "2  B", "3  C′  updated", "4  D". Highlight C′ blue.
+Short arrow label between B and C: "patch.start = 2 → R2, not current index 2"
+This is crucial: original index 2 resolves to retained tracked range R2 at current position 3, preserving B and X. Do not draw an arrow to B.
+Footer text: "Granularity: whole paragraphs or tables • Final DOCX export is recovery-only • No automatic full-document replacement"
+
+Accuracy constraints: No absolute character offset tracking. No persistent bookmarks are inserted. The source DOCX is exported once, with live OOXML reads bracketing it; the backend captures an in-memory journal cursor before agent edits and reads through a fixed endpoint afterward. No baseline DOCX re-export. Office.js and SuperDoc do not share live range objects. Avoid implying atomic writes or a coauthor lock. Keep the diagram clean and understandable, using the labels above accurately.

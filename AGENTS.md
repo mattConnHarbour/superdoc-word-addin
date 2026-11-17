@@ -78,19 +78,17 @@ package that can be installed independently from this example.
 
 | Integration slice | Copy together |
 | --- | --- |
-| Shared adapter foundation | `src/contract.ts`, `src/ooxml.ts`, and `src/taskpane/document-revision.ts` |
+| Shared adapter foundation | `src/contract.ts`, `src/ooxml.ts`, and `src/digest.ts` |
 | Word fragment adapter | `src/taskpane/operations.ts`, `src/taskpane/operations/`, and `src/taskpane/office/` |
-| Backend fragment planner | `src/server/operations.ts`, `src/server/operations/`, and `src/server/fragments/` |
+| Backend journal adapter | `src/server/operations.ts`, `src/server/operations/`, `src/server/changes/`, and `src/server/fragments/` |
 | Request lifecycle and conflict UI behavior | `src/taskpane/roundtrip.ts`; adapt its transport and status callbacks to the host app |
 | Existing OpenAI + SDK agent, if wanted | `src/server/agent.ts` and `src/server/agent-loop.ts`; otherwise keep the host app's agent |
 | Standalone Word add-in shell, if needed | `manifest.xml`, `assets/`, `src/taskpane/taskpane.html`, and the host's task-pane UI/build wiring |
 
-Copy the shared foundation with either fragment adapter. In particular, the
-backend imports `src/taskpane/document-revision.ts` despite that file's browser
-folder location: it contains shared package hashing and no Word globals. Keep
-that import working, or move it into the host app's shared module and update
-both sides. Copying only the operations barrel omits its transitive helpers.
-Preserve relative paths initially, then move modules with their imports intact.
+Copy the shared foundation with either adapter. Copying an operations barrel
+alone omits its transitive helpers. Preserve relative paths initially, then move
+modules with their imports intact. The Changes API adapter also needs
+`@superdoc/sdk`; it is independent of OpenAI, the agent loop, HTTP, and the UI.
 
 For **full replacement only**, copy `src/server/operations/full-document.ts`
 or `src/taskpane/operations/full-document.ts` with that side's operations types
@@ -109,8 +107,8 @@ checks, or retain this example's capture/orchestration dependencies as well.
   needs `@types/office-js` and the Office.js runtime
   script used by `src/taskpane/taskpane.html`.
 - The existing backend agent additionally needs `@superdoc/sdk` and `openai`
-  plus Node 22's Web Crypto and AbortSignal support. The fragment planner itself
-  does not require an LLM or OpenAI; give it DOCX exports from the host's agent.
+  plus Node 22's Web Crypto and AbortSignal support. The journal adapter does
+  not require an LLM; it observes mutations in the host agent's open SDK document.
 - Reuse the host's HTTP framework and HTTPS deployment. `src/server/app.ts` and
   `src/server/index.ts` are optional local-server scaffolding, not required
   adapter dependencies. Hono and `@hono/node-server` are needed only if copied.
@@ -118,9 +116,8 @@ checks, or retain this example's capture/orchestration dependencies as well.
   `src/taskpane/taskpane.css`; they are not operation dependencies. Keep the host's
   own build tooling, or adapt `scripts/build.ts` for a new standalone add-in.
 - Give a separately branded add-in its own manifest ID and replace its display
-  metadata, icon, source, and task-pane resource URLs. Update the own-add-in ID
-  used by `src/taskpane/document-revision.ts` for task-pane metadata filtering.
-  Keep the required Word permissions/API sets and load Office.js before use.
+  metadata, icon, source, and task-pane resource URLs. Keep the required Word
+  permissions/API sets and load Office.js before use.
 - Adapt the transport in `src/taskpane/roundtrip.ts` to the app's authenticated
   API. The demo uses a same-origin `/api/run`; do not copy localhost Origin/Host
   checks unchanged into a hosted service or simply remove access control.
@@ -134,9 +131,13 @@ Use `src/server/agent.ts` and `src/taskpane/roundtrip.ts` as executable examples
 1. Capture with `captureFragmentSource`; retain its snapshot and tracked ranges
    in the same Word pane session. Send the DOCX, request UUID, prompt, and history
    to the backend. Never serialize the live Word ranges to the server.
-2. Open the source with SuperDoc and export the baseline **before agent edits**.
-   After the agent edits and verifies, export the updated DOCX. Pass these byte
-   arrays to `createFragmentUpdate({ source, baseline, updated })`.
+   Preserve the live-body checks bracketing DOCX export. Keep live Word
+   preconditions separate from DOCX hashes; the two XML projections can differ.
+2. Open the source in SuperDoc and call `captureChangeSource(document, source)`
+   **before agent mutations**. Run the agent on this same live document, then
+   call `createFragmentUpdate(document, checkpoint)`. Keep both calls inside the
+   SDK client lifetime; saving/reopening or switching sessions loses the journal
+   pairing. Do not substitute before/after DOCX comparisons.
 3. Return the patch plan with the request ID and SHA-256 of the exact source
    bytes. Keep `runResponseSchema` or an equivalent validated contract in sync
    on both sides. The current response also requires a full recovery DOCX from
@@ -149,6 +150,17 @@ Use `src/server/agent.ts` and `src/taskpane/roundtrip.ts` as executable examples
 5. Release with `releaseFragmentSource` in `finally`, including on transport
    failure, cancellation, unsupported edits, or conflicts. Permit only one
    capture/apply lifecycle at a time per pane; tracked state is session-local.
+
+The backend operation reads all Changes API pages through a captured endpoint,
+rejects evicted or incomplete history, and verifies the session/revision. Journal
+records supply affected identities; SDK block lists supply order; SDK
+`selection.extractOoxml` supplies complete block XML and dependencies. Nested
+cell events resolve to the containing top-level table. Keep extraction and Flat
+OPC packaging separate from journal reading and Word range planning.
+A native `diff.capture`/`diff.compare` checkpoint is used only to reject unsupported
+global changes and detect net-zero edits. Do not inspect its opaque payload or
+use it to discover fragment targets. Source fingerprints are Word preconditions,
+not another document diff.
 
 The SDK-to-Office mapping is structural: resulting paragraphs/tables become
 OOXML passed to tracked Word ranges, rather than a duplicate Office.js

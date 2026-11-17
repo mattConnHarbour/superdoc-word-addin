@@ -4,7 +4,7 @@ import { tmpdir } from "node:os";
 import path from "node:path";
 import { createSuperDocClient } from "@superdoc/sdk";
 import OpenAI from "openai";
-import { createFragmentUpdate, createFullDocumentUpdate } from "./operations.js";
+import { captureChangeSource, createFragmentUpdate, createFullDocumentUpdate } from "./operations.js";
 import { MAX_DOCX_BYTES, type RunRequest, type RunResponse } from "../contract.js";
 import { runAgentTools, type Complete } from "./agent-loop.js";
 export type { Complete } from "./agent-loop.js";
@@ -33,9 +33,7 @@ export async function runAgent(request: RunRequest, complete: Complete, signal: 
     const output = path.join(directory, "output.docx");
     await writeFile(input, source, { mode: 0o600 });
     const document = await client.open({ doc: input, runtime: "v2" });
-    const baselinePath = path.join(directory, "baseline.docx");
-    await document.save({ out: baselinePath });
-    const baseline = await readFile(baselinePath);
+    const changeSource = await captureChangeSource(document, source);
     const result = await runAgentTools(document, request, complete, signal);
     signal.throwIfAborted();
     await document.save({ out: output });
@@ -46,7 +44,7 @@ export async function runAgent(request: RunRequest, complete: Complete, signal: 
       message: result.message,
       toolsUsed: result.toolsUsed,
       ...createFullDocumentUpdate(updated),
-      ...await createFragmentUpdate({ source, baseline, updated }),
+      ...await createFragmentUpdate(document, changeSource),
     };
   } finally {
     try { await client.dispose(); }
